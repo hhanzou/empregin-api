@@ -13,3 +13,63 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  ADMIN
+  COMPANY_ADMIN
+  COMPANY_HR
+  USER
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role          @default(USER)
+  companyId    Int?
+  company      Company?      @relation(fields: [companyId], references: [id])
+  applications Application[]
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Company {
+  id        Int       @id @default(autoincrement())
+  name      String
+  cnpj      String    @unique
+  users     User[]
+  jobs      Job[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Job {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String
+  status       JobStatus     @default(OPEN)
+  companyId    Int
+  company      Company       @relation(fields: [companyId], references: [id])
+  applications Application[]
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Application {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  jobId     Int
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+  job  Job  @relation(fields: [jobId], references: [id])
+}
