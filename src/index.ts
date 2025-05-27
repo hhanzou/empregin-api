@@ -1,22 +1,25 @@
-import dotenv from 'dotenv';
-import express from 'express';
+import dotenv from "dotenv";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import * as swaggerDocument from "./docs/swagger.json";
 
-import { swaggerDocs, swaggerUiSetup } from '@lib/swagger';
-
-import authRoutes from '@routes/auth.routes';
-import userRoutes from '@routes/user.routes';
-
+import { RegisterRoutes } from "@routes/routes";
+import { errorHandler } from "@middlewares/errorHandler";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// Swagger
-app.use('/api-docs', swaggerDocs, swaggerUiSetup);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.use('/users', userRoutes);
-app.use('/auth', authRoutes);
+RegisterRoutes(app);
 
+app.use(errorHandler);
 
-app.listen(3000, () => console.log('Server running on http://localhost:3000 - http://localhost:3000/api-docs'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>
+  console.log(
+    `🚀 Server running on http://localhost:${PORT} - Swagger: http://localhost:${PORT}/docs`
+  )
+);

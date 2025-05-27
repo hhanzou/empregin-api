@@ -19,6 +19,10 @@ node_modules/
 /src/generated/
 /src/generated/prisma/
 
+# TSOA
+src/routes/routes.ts
+src/docs/swagger.json
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
