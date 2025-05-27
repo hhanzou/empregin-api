@@ -1,18 +1,19 @@
 import {
-  Controller,
-  Route,
-  Tags,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Path,
   Body,
-  Security,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Path,
+  Post,
   Request,
+  Route,
+  Security,
+  Tags,
 } from "tsoa";
+
+import { RequestWithUser } from "@customTypes/RequestWithUser";
 import { prisma } from "@lib/prisma";
-import { AuthenticatedUser } from "interfaces/auth";
 
 export type CreateCompanyDto = {
   name: string;
@@ -32,7 +33,14 @@ export type UpdateCompanyDto = {
 export class CompanyController extends Controller {
   @Security("bearerAuth")
   @Get()
-  public async getAll(): Promise<any[]> {
+  public async getAll(@Request() req: RequestWithUser): Promise<any[]> {
+    const user = req.user;
+
+    if (!user) {
+      this.setStatus(401);
+      throw new Error("Não autenticado");
+    }
+
     return prisma.company.findMany({
       where: { deletedAt: null },
       include: { users: false, jobs: false },
@@ -59,9 +67,9 @@ export class CompanyController extends Controller {
   @Post()
   public async create(
     @Body() body: CreateCompanyDto,
-    @Request() req: Request
+    @Request() req: RequestWithUser
   ): Promise<any> {
-    const user = (req as Request & { user?: AuthenticatedUser }).user;
+    const user = req.user;
 
     if (!user) {
       this.setStatus(401);
@@ -102,9 +110,9 @@ export class CompanyController extends Controller {
   public async update(
     @Path() id: number,
     @Body() body: UpdateCompanyDto,
-    @Request() req: Request
+    @Request() req: RequestWithUser
   ): Promise<any> {
-    const user = (req as Request & { user?: AuthenticatedUser }).user;
+    const user = req.user;
 
     if (!user) {
       this.setStatus(401);
@@ -141,9 +149,9 @@ export class CompanyController extends Controller {
   @Delete("{id}")
   public async delete(
     @Path() id: number,
-    @Request() req: Request
+    @Request() req: RequestWithUser
   ): Promise<void> {
-    const user = (req as Request & { user?: AuthenticatedUser }).user;
+    const user = req.user;
 
     if (!user) {
       this.setStatus(401);
@@ -173,7 +181,7 @@ export class CompanyController extends Controller {
       data: { deletedAt: new Date() },
     });
 
-    this.setStatus(204); // No Content
+    this.setStatus(204);
   }
 
   @Security("bearerAuth")
@@ -181,9 +189,9 @@ export class CompanyController extends Controller {
   public async addUserToCompany(
     @Path() companyId: number,
     @Path() userId: number,
-    @Request() req: Request
+    @Request() req: RequestWithUser
   ): Promise<string> {
-    const requester = (req as Request & { user?: AuthenticatedUser }).user;
+    const requester = req.user;
 
     if (!requester || !["ADMIN", "COMPANY_ADMIN"].includes(requester.role)) {
       this.setStatus(403);
@@ -221,9 +229,9 @@ export class CompanyController extends Controller {
   public async removeUserFromCompany(
     @Path() companyId: number,
     @Path() userId: number,
-    @Request() req: Request
+    @Request() req: RequestWithUser
   ): Promise<string> {
-    const requester = (req as Request & { user?: AuthenticatedUser }).user;
+    const requester = req.user;
 
     if (!requester || !["ADMIN", "COMPANY_ADMIN"].includes(requester.role)) {
       this.setStatus(403);

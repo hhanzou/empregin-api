@@ -1,13 +1,9 @@
-import { Request } from "express";
-import { verifyToken } from "@lib/jwt"; // ajuste conforme o seu caminho
+import { RequestWithUser } from "@customTypes/RequestWithUser";
+import { verifyToken } from "@lib/jwt";
 import { AuthenticatedUser } from "interfaces/auth";
 
-/**
- * Esta função será chamada automaticamente pelo TSOA
- * sempre que um endpoint tiver `@Security('bearerAuth')`.
- */
 export async function expressAuthentication(
-  request: Request,
+  request: RequestWithUser,
   securityName: string,
   scopes?: string[]
 ): Promise<AuthenticatedUser> {
@@ -21,6 +17,9 @@ export async function expressAuthentication(
 
   try {
     const decoded = verifyToken(token);
+
+    request.user = decoded;
+
     return decoded;
   } catch (err) {
     throw new Error("Token inválido ou expirado");

@@ -1,18 +1,18 @@
-import {
-  Controller,
-  Route,
-  Tags,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Path,
-  Body,
-  Request,
-  Security,
-} from "tsoa";
+import { RequestWithUser } from "@customTypes/RequestWithUser";
 import { prisma } from "@lib/prisma";
-import { Request as ExpressRequest } from "express";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Path,
+  Post,
+  Request,
+  Route,
+  Security,
+  Tags,
+} from "tsoa";
 
 export type CreateJobDto = {
   title: string;
@@ -58,7 +58,7 @@ export class JobController extends Controller {
   @Post()
   public async create(
     @Body() body: CreateJobDto,
-    @Request() req: ExpressRequest
+    @Request() req: RequestWithUser
   ): Promise<any> {
     const user = req.user;
 
@@ -82,7 +82,7 @@ export class JobController extends Controller {
   public async update(
     @Path() id: number,
     @Body() body: UpdateJobDto,
-    @Request() req: ExpressRequest
+    @Request() req: RequestWithUser
   ): Promise<any> {
     const user = req.user;
 
@@ -113,7 +113,7 @@ export class JobController extends Controller {
   @Delete("{id}")
   public async delete(
     @Path() id: number,
-    @Request() req: ExpressRequest
+    @Request() req: RequestWithUser
   ): Promise<void> {
     const user = req.user;
 

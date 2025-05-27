@@ -8,5 +8,6 @@ export const logger = pino({
       ignore: "pid,hostname",
     },
   },
-  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  level: "info",
+  // level:"debug",
 });

@@ -14,6 +14,7 @@ import {
 } from "tsoa";
 import { prisma } from "@lib/prisma";
 import { Prisma } from "@prisma/client";
+import { RequestWithUser } from "@customTypes/RequestWithUser";
 
 // TODO: Implementar validações de entrada
 // TODO: Implementar regres de negocio
@@ -61,7 +62,7 @@ export class UserController extends Controller {
   @Security("bearerAuth")
   @Post()
   public async createUser(
-    @Request() req: any,
+    @Request() req: RequestWithUser,
     @Body() body: CreateUserDto
   ): Promise<any> {
     const requester = req.user;

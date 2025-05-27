@@ -36,11 +36,11 @@
       "@services/*": ["services/*"],
       "@middlewares/*": ["middlewares/*"],
       "@routes/*": ["routes/*"],
-      "@types/*": ["types/*"],
+      "@customTypes/*": ["types/*"],
       "@utils/*": ["utils/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
-    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "types": ["node"],
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
