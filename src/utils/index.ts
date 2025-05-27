@@ -1,6 +1,15 @@
-import { AuthenticatedUser } from "interfaces/auth";
+import { Role } from "@prisma/client";
+import { Controller } from "tsoa";
 
-export const getUserFromRequest = (
-  req: Request
-): AuthenticatedUser | undefined =>
-  (req as Request & { user?: AuthenticatedUser }).user;
+export function hasRole(user: { role: Role }, roles: Role[]) {
+  return roles.includes(user.role);
+}
+
+export function throwError(
+  controller: Controller,
+  status: number,
+  message = "Erro inesperado"
+): never {
+  controller.setStatus(status);
+  throw new Error(message);
+}
