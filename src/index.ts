@@ -1,10 +1,12 @@
 import dotenv from "dotenv";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
-import * as swaggerDocument from "./docs/swagger.json";
 
-import { RegisterRoutes } from "@routes/routes";
+import { httpLogger } from "@lib/pino-http";
 import { errorHandler } from "@middlewares/errorHandler";
+import { RegisterRoutes } from "@routes/routes";
+
+import * as swaggerDocument from "./docs/swagger.json";
 
 dotenv.config();
 
@@ -12,6 +14,8 @@ const app = express();
 app.use(express.json());
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use(httpLogger);
 
 RegisterRoutes(app);
 
