@@ -22,6 +22,7 @@ type RegisterResponse = {
     companyId?: number | null;
   };
 };
+
 type LoginInput = {
   email: string;
   password: string;

@@ -16,6 +16,7 @@ import { prisma } from "@lib/prisma";
 import { Prisma } from "@prisma/client";
 
 // TODO: Implementar validações de entrada
+// TODO: Implementar regres de negocio
 
 interface CreateUserDto {
   name: string;
@@ -37,6 +38,7 @@ interface UpdateUserDto {
 @Tags("Users")
 @Security("bearerAuth")
 export class UserController extends Controller {
+  @Security("bearerAuth")
   @Get()
   public async getAll(): Promise<any[]> {
     return prisma.user.findMany({
@@ -44,8 +46,9 @@ export class UserController extends Controller {
     });
   }
 
+  @Security("bearerAuth")
   @Get("{id}")
-  public async getOne(@Path() id: number): Promise<any> {
+  public async getById(@Path() id: number): Promise<any> {
     const user = await prisma.user.findUnique({
       where: { id },
     });
@@ -55,6 +58,7 @@ export class UserController extends Controller {
     return user;
   }
 
+  @Security("bearerAuth")
   @Post()
   public async createUser(
     @Request() req: any,
@@ -79,10 +83,10 @@ export class UserController extends Controller {
     if (requesterRole === "ADMIN") {
     } else if (requesterRole === "COMPANY_ADMIN") {
       // COMPANY_ADMIN só pode criar COMPANY_HR da mesma empresa
-      if (targetRole !== "COMPANY_HR") {
+      if (targetRole !== "COMPANY_HR" && targetRole !== "COMPANY_ADMIN") {
         this.setStatus(403);
         throw new Error(
-          "COMPANY_ADMIN só pode criar usuários com role COMPANY_HR"
+          "COMPANY_ADMIN só pode criar usuários com role COMPANY_HR ou COMPANY_ADMIN"
         );
       }
 
@@ -106,6 +110,7 @@ export class UserController extends Controller {
     return safeUser;
   }
 
+  @Security("bearerAuth")
   @Patch("{id}")
   public async update(
     @Path() id: number,
@@ -119,6 +124,7 @@ export class UserController extends Controller {
     return safeUser;
   }
 
+  @Security("bearerAuth")
   @Delete("{id}")
   public async delete(@Path() id: number): Promise<void> {
     await prisma.user.update({

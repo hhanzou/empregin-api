@@ -30,6 +30,7 @@ export type UpdateCompanyDto = {
 @Route("companies")
 @Tags("Company")
 export class CompanyController extends Controller {
+  @Security("bearerAuth")
   @Get()
   public async getAll(): Promise<any[]> {
     return prisma.company.findMany({
@@ -38,6 +39,7 @@ export class CompanyController extends Controller {
     });
   }
 
+  @Security("bearerAuth")
   @Get("{id}")
   public async getById(@Path() id: number): Promise<any> {
     const company = await prisma.company.findUnique({
