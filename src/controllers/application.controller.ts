@@ -1,12 +1,7 @@
-import { RequestWithUser } from "@customTypes/RequestWithUser";
-import { prisma } from "@lib/prisma";
-import { getUserFromRequest } from "@utils/index";
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  Path,
   Post,
   Query,
   Request,
@@ -15,9 +10,14 @@ import {
   Tags,
 } from "tsoa";
 
+import { RequestWithUser } from "@customTypes/RequestWithUser";
+import { prisma } from "@lib/prisma";
+import { Role } from "@prisma/client";
+import { hasRole, throwError } from "@utils/index";
+
 export type CreateApplicationDto = {
   jobId: number;
-  userId?: number;
+  userId: number;
 };
 
 @Route("applications")
@@ -31,24 +31,21 @@ export class ApplicationController extends Controller {
   ): Promise<any[]> {
     const user = req.user;
 
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
+    if (!user || !hasRole(user, [Role.ADMIN, Role.USER])) {
+      throwError(this, 403, "Acesso negado");
     }
 
-    const isAdmin = user.role === "ADMIN";
-
-    // USER só pode consultar suas próprias inscrições
-    if (!isAdmin && userId && userId !== user.userId) {
-      this.setStatus(403);
-      throw new Error("Você só pode visualizar suas próprias inscrições");
+    if (userId == null) {
+      throwError(this, 400, "Parâmetro 'userId' é obrigatório");
     }
 
-    const filterUserId = userId ?? user.userId;
+    if (!hasRole(user, [Role.ADMIN]) && userId !== user.userId) {
+      throwError(this, 403, "Você só pode visualizar suas próprias inscrições");
+    }
 
     return prisma.application.findMany({
       where: {
-        userId: filterUserId,
+        userId,
         deletedAt: null,
       },
       include: {
@@ -65,18 +62,14 @@ export class ApplicationController extends Controller {
   ): Promise<any> {
     const user = req.user;
 
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
-    }
+    if (!user || !hasRole(user, [Role.ADMIN, Role.USER]))
+      throwError(this, 403, "Acesso negado");
 
     const isAdmin = user.role === "ADMIN";
     const targetUserId = body.userId ?? user.userId;
 
-    if (!isAdmin && targetUserId !== user.userId) {
-      this.setStatus(403);
-      throw new Error("Você não pode aplicar em nome de outro usuário");
-    }
+    if (!isAdmin && targetUserId !== user.userId)
+      throwError(this, 403, "Você não pode aplicar em nome de outro usuário");
 
     const job = await prisma.job.findFirst({
       where: {
@@ -86,10 +79,7 @@ export class ApplicationController extends Controller {
       },
     });
 
-    if (!job) {
-      this.setStatus(400);
-      throw new Error("Vaga não disponível");
-    }
+    if (!job) throwError(this, 400, "Vaga não disponível");
 
     const existing = await prisma.application.findFirst({
       where: {
@@ -99,10 +89,8 @@ export class ApplicationController extends Controller {
       },
     });
 
-    if (existing) {
-      this.setStatus(409);
-      throw new Error("Já existe uma inscrição para essa vaga");
-    }
+    if (existing)
+      throwError(this, 409, "Já existe uma inscrição para essa vaga");
 
     return prisma.application.create({
       data: {
@@ -110,40 +98,5 @@ export class ApplicationController extends Controller {
         jobId: body.jobId,
       },
     });
-  }
-
-  @Security("bearerAuth")
-  @Delete("{id}")
-  public async cancelApplication(
-    @Path() id: number,
-    @Request() req: RequestWithUser
-  ): Promise<void> {
-    const user = req.user;
-
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
-    }
-
-    const application = await prisma.application.findUnique({ where: { id } });
-
-    if (!application || application.deletedAt) {
-      this.setStatus(404);
-      throw new Error("Inscrição não encontrada");
-    }
-
-    const isAdmin = user.role === "ADMIN";
-
-    if (!isAdmin && application.userId !== user.userId) {
-      this.setStatus(403);
-      throw new Error("Você só pode cancelar suas próprias inscrições");
-    }
-
-    await prisma.application.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-
-    this.setStatus(204);
   }
 }
