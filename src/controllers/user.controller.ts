@@ -113,11 +113,11 @@ export class UserController extends Controller {
           403,
           "COMPANY_ADMIN só pode criar usuários da sua própria empresa"
         );
-    } else {
+    } else if (user.role !== Role.ADMIN) {
       throwError(403, "Você não tem permissão para criar usuários");
     }
 
-    const newUser = await prisma.user.create({
+    await prisma.user.create({
       data: body as Prisma.UserCreateInput,
     });
 

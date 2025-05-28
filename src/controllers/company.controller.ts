@@ -160,28 +160,20 @@ export class CompanyController extends Controller {
   ): Promise<void> {
     const user = req.user;
 
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
-    }
+    if (!user) throwError(401, "Não autenticado");
 
     const company = await prisma.company.findFirst({
       where: { id, deletedAt: null },
     });
 
-    if (!company) {
-      this.setStatus(404);
-      throw new Error("Empresa não encontrada ou já excluída");
-    }
+    if (!company) throwError(404, "Empresa não encontrada ou já excluída");
 
     const isAdmin = user.role === "ADMIN";
     const isCompanyAdmin =
       user.role === "COMPANY_ADMIN" && user.companyId === id;
 
-    if (!isAdmin && !isCompanyAdmin) {
-      this.setStatus(403);
-      throw new Error("Você não tem permissão para excluir esta empresa");
-    }
+    if (!isAdmin && !isCompanyAdmin)
+      throwError(403, "Você não tem permissão para excluir esta empresa");
 
     await prisma.company.update({
       where: { id },
@@ -201,38 +193,29 @@ export class CompanyController extends Controller {
     @Path() companyId: number,
     @Path() userId: number,
     @Request() req: RequestWithUser
-  ): Promise<string> {
-    const requester = req.user;
+  ) {
+    const user = req.user;
 
-    if (!requester || !["ADMIN", "COMPANY_ADMIN"].includes(requester.role)) {
-      this.setStatus(403);
-      throw new Error("Acesso negado");
-    }
+    if (!user || !hasRole(user, [Role.ADMIN, Role.COMPANY_ADMIN]))
+      throwError(403, "Acesso negado");
 
-    if (
-      requester.role === "COMPANY_ADMIN" &&
-      requester.companyId !== companyId
-    ) {
-      this.setStatus(403);
-      throw new Error("Você só pode gerenciar usuários da sua empresa");
-    }
+    if (user.role === Role.COMPANY_ADMIN && user.companyId !== companyId)
+      throwError(403, "Você só pode gerenciar usuários da sua empresa");
 
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
 
     if (
       !targetUser ||
       !["COMPANY_ADMIN", "COMPANY_HR"].includes(targetUser.role)
-    ) {
-      this.setStatus(400);
-      throw new Error("Só é permitido associar COMPANY_ADMIN ou COMPANY_HR");
-    }
+    )
+      throwError(400, "Só é permitido associar COMPANY_ADMIN ou COMPANY_HR");
 
     await prisma.user.update({
       where: { id: userId },
       data: { companyId },
     });
 
-    return "Usuário associado à empresa com sucesso";
+    this.setStatus(204);
   }
 
   /**
@@ -245,37 +228,28 @@ export class CompanyController extends Controller {
     @Path() companyId: number,
     @Path() userId: number,
     @Request() req: RequestWithUser
-  ): Promise<string> {
+  ) {
     const requester = req.user;
 
-    if (!requester || !["ADMIN", "COMPANY_ADMIN"].includes(requester.role)) {
-      this.setStatus(403);
-      throw new Error("Acesso negado");
-    }
+    if (!requester || !["ADMIN", "COMPANY_ADMIN"].includes(requester.role))
+      throwError(403, "Acesso negado");
 
-    if (
-      requester.role === "COMPANY_ADMIN" &&
-      requester.companyId !== companyId
-    ) {
-      this.setStatus(403);
-      throw new Error("Você só pode remover usuários da sua empresa");
-    }
+    if (requester.role === "COMPANY_ADMIN" && requester.companyId !== companyId)
+      throwError(403, "Você só pode remover usuários da sua empresa");
 
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
 
     if (
       !targetUser ||
       !["COMPANY_ADMIN", "COMPANY_HR"].includes(targetUser.role)
-    ) {
-      this.setStatus(400);
-      throw new Error("Só é permitido remover COMPANY_ADMIN ou COMPANY_HR");
-    }
+    )
+      throwError(400, "Só é permitido remover COMPANY_ADMIN ou COMPANY_HR");
 
     await prisma.user.update({
       where: { id: userId },
       data: { companyId: null },
     });
 
-    return "Usuário removido da empresa com sucesso";
+    this.setStatus(204);
   }
 }

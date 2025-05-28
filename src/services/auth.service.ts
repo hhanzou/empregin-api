@@ -25,7 +25,6 @@ type RegisterPayload = {
   name: string;
   email: string;
   password: string;
-  role?: Role;
 };
 
 // TODO: criar validações de entrada
@@ -38,7 +37,6 @@ export async function register(data: RegisterPayload): Promise<LoginResponse> {
       name: data.name,
       email: data.email,
       password: hash,
-      role: data.role ?? "USER",
     },
   });
 

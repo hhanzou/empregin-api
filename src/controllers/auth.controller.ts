@@ -9,8 +9,6 @@ type RegisterInput = {
   name: string;
   email: string;
   password: string;
-  role?: string;
-  companyId?: number;
 };
 
 type RegisterResponse = {
@@ -82,7 +80,6 @@ export class AuthController extends Controller {
       name,
       email,
       password,
-      role: Role.USER,
     });
 
     return result;

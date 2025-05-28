@@ -64,8 +64,8 @@ export class JobController extends Controller {
   }
 
   /**
-   * Retorna vagas abertas da empresa
-   * @summary Listar vagas abertas da empresa
+   * Retorna as vagas da empresa
+   * @summary Listar vagas da empresa
    */
   @Security("bearerAuth")
   @Get("company/{id}")
@@ -88,8 +88,21 @@ export class JobController extends Controller {
       throwError(403, "Acesso negado");
 
     const jobs = await prisma.job.findMany({
-      where: { companyId: id, status: JobStatus.OPEN },
-      include: { company: true, applications: true },
+      where: { companyId: id },
+      include: {
+        company: true,
+        applications: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return jobs;
