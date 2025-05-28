@@ -3,6 +3,7 @@ import { Controller, Route, Tags, Post, Body } from "tsoa";
 import { login as loginService } from "@services/auth.service";
 
 import { register as registerService } from "@services/auth.service";
+import { Role } from "@prisma/client";
 
 type RegisterInput = {
   name: string;
@@ -42,6 +43,10 @@ export type LoginResponse = {
 @Route("auth")
 @Tags("Auth")
 export class AuthController extends Controller {
+  /**
+   * Faz o login do usuário
+   * @summary Login
+   */
   @Post("login")
   public async login(@Body() body: LoginInput): Promise<LoginResponse> {
     if (!body.email || !body.password) {
@@ -58,6 +63,10 @@ export class AuthController extends Controller {
     }
   }
 
+  /**
+   * Registra um novo usuário padrão
+   * @summary Registrar
+   */
   @Post("register")
   public async register(
     @Body() body: RegisterInput
@@ -73,7 +82,7 @@ export class AuthController extends Controller {
       name,
       email,
       password,
-      role: "USER",
+      role: Role.USER,
     });
 
     return result;

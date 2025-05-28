@@ -33,6 +33,10 @@ export type UpdateCompanyDto = {
 @Route("companies")
 @Tags("Company")
 export class CompanyController extends Controller {
+  /**
+   * Retorna todas as empresas
+   * @summary Listar empresas
+   */
   @Security("bearerAuth")
   @Get()
   public async getAll(@Request() req: RequestWithUser): Promise<any[]> {
@@ -49,6 +53,10 @@ export class CompanyController extends Controller {
     });
   }
 
+  /**
+   * Retorna uma empresa pelo ID
+   * @summary Obter empresa
+   */
   @Security("bearerAuth")
   @Get("{id}")
   public async getById(@Path() id: number): Promise<any> {
@@ -65,6 +73,10 @@ export class CompanyController extends Controller {
     return company;
   }
 
+  /**
+   * Cria uma nova empresa
+   * @summary Criar empresa
+   */
   @Security("bearerAuth")
   @Post()
   public async create(
@@ -74,14 +86,13 @@ export class CompanyController extends Controller {
     const user = req.user;
 
     if (!user || !hasRole(user, [Role.ADMIN, Role.COMPANY_ADMIN]))
-      throwError(this, 403, "Acesso negado");
+      throwError(403, "Acesso negado");
 
     const isAdmin = user.role === Role.ADMIN;
     const isCompanyAdmin = user.role === Role.COMPANY_ADMIN;
 
     if (isCompanyAdmin && user.companyId)
       throwError(
-        this,
         403,
         "Você já está vinculado a uma empresa e não pode criar outra"
       );
@@ -100,6 +111,10 @@ export class CompanyController extends Controller {
     return company;
   }
 
+  /**
+   * Atualiza uma empresa pelo id
+   * @summary Atualizar empresa
+   */
   @Security("bearerAuth")
   @Patch("{id}")
   public async update(
@@ -110,20 +125,20 @@ export class CompanyController extends Controller {
     const user = req.user;
 
     if (!user || !hasRole(user, [Role.ADMIN, Role.COMPANY_ADMIN]))
-      throwError(this, 403, "Acesso negado");
+      throwError(403, "Acesso negado");
 
     const company = await prisma.company.findFirst({
       where: { id, deletedAt: null },
     });
 
-    if (!company) throwError(this, 404, "Empresa não encontrada");
+    if (!company) throwError(404, "Empresa não encontrada");
 
     const isAdmin = user.role === Role.ADMIN;
     const isCompanyAdmin =
       user.role === Role.COMPANY_ADMIN && user.companyId === id;
 
     if (!isAdmin && !isCompanyAdmin)
-      throwError(this, 403, "Você não tem permissão para editar esta empresa");
+      throwError(403, "Você não tem permissão para editar esta empresa");
 
     const updated = await prisma.company.update({
       where: { id },
@@ -133,6 +148,10 @@ export class CompanyController extends Controller {
     return updated;
   }
 
+  /**
+   * Deleta uma empresa
+   * @summary Excluir empresa
+   */
   @Security("bearerAuth")
   @Delete("{id}")
   public async delete(
@@ -172,6 +191,10 @@ export class CompanyController extends Controller {
     this.setStatus(204);
   }
 
+  /**
+   * Adiciona usuário a uma empresa
+   * @summary Adicionar usuário a empresa
+   */
   @Security("bearerAuth")
   @Patch("{companyId}/add-user/{userId}")
   public async addUserToCompany(
@@ -212,6 +235,10 @@ export class CompanyController extends Controller {
     return "Usuário associado à empresa com sucesso";
   }
 
+  /**
+   * Remove usuário a uma empresa
+   * @summary Remover usuário a empresa
+   */
   @Security("bearerAuth")
   @Patch("{companyId}/remove-user/{userId}")
   public async removeUserFromCompany(

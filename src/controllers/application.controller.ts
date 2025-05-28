@@ -23,6 +23,10 @@ export type CreateApplicationDto = {
 @Route("applications")
 @Tags("Application")
 export class ApplicationController extends Controller {
+  /**
+   * Retorna todas as aplicações de um usuario
+   * @summary Listar aplicações
+   */
   @Security("bearerAuth")
   @Get()
   public async getApplications(
@@ -32,15 +36,15 @@ export class ApplicationController extends Controller {
     const user = req.user;
 
     if (!user || !hasRole(user, [Role.ADMIN, Role.USER])) {
-      throwError(this, 403, "Acesso negado");
+      throwError(403, "Acesso negado");
     }
 
     if (userId == null) {
-      throwError(this, 400, "Parâmetro 'userId' é obrigatório");
+      throwError(400, "Parâmetro 'userId' é obrigatório");
     }
 
     if (!hasRole(user, [Role.ADMIN]) && userId !== user.userId) {
-      throwError(this, 403, "Você só pode visualizar suas próprias inscrições");
+      throwError(403, "Você só pode visualizar suas próprias inscrições");
     }
 
     return prisma.application.findMany({
@@ -54,6 +58,10 @@ export class ApplicationController extends Controller {
     });
   }
 
+  /**
+   * Aplica para uma vaga
+   * @summary Aplicar a uma vaga
+   */
   @Security("bearerAuth")
   @Post()
   public async applyToJob(
@@ -63,13 +71,13 @@ export class ApplicationController extends Controller {
     const user = req.user;
 
     if (!user || !hasRole(user, [Role.ADMIN, Role.USER]))
-      throwError(this, 403, "Acesso negado");
+      throwError(403, "Acesso negado");
 
     const isAdmin = user.role === "ADMIN";
     const targetUserId = body.userId ?? user.userId;
 
     if (!isAdmin && targetUserId !== user.userId)
-      throwError(this, 403, "Você não pode aplicar em nome de outro usuário");
+      throwError(403, "Você não pode aplicar em nome de outro usuário");
 
     const job = await prisma.job.findFirst({
       where: {
@@ -79,7 +87,7 @@ export class ApplicationController extends Controller {
       },
     });
 
-    if (!job) throwError(this, 400, "Vaga não disponível");
+    if (!job) throwError(400, "Vaga não disponível");
 
     const existing = await prisma.application.findFirst({
       where: {
@@ -89,8 +97,7 @@ export class ApplicationController extends Controller {
       },
     });
 
-    if (existing)
-      throwError(this, 409, "Já existe uma inscrição para essa vaga");
+    if (existing) throwError(409, "Já existe uma inscrição para essa vaga");
 
     await prisma.application.create({
       data: {

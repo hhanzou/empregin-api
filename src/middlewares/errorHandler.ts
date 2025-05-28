@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 
 export function errorHandler(
-  err: unknown,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction
 ): void {
-  const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  const status = err.status ?? 500;
 
   const errorMessage = err instanceof Error ? err.message : "Erro inesperado";
   const errorStack =
@@ -16,7 +16,7 @@ export function errorHandler(
       ? err.stack
       : undefined;
 
-  res.status(statusCode).json({
+  res.status(status).json({
     success: false,
     message: errorMessage,
     stack: errorStack,

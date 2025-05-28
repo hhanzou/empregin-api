@@ -37,6 +37,10 @@ interface UpdateUserDto {
 @Tags("Users")
 @Security("bearerAuth")
 export class UserController extends Controller {
+  /**
+   * Retorna todos os usuários
+   * @summary Listar usuários
+   */
   @Security("bearerAuth")
   @Get()
   public async getAll(): Promise<any[]> {
@@ -46,6 +50,10 @@ export class UserController extends Controller {
     });
   }
 
+  /**
+   * Retorna um usuário pelo id
+   * @summary Obter usuário
+   */
   @Security("bearerAuth")
   @Get("{id}")
   public async getById(
@@ -55,7 +63,7 @@ export class UserController extends Controller {
     const user = req.user;
 
     if (!user) {
-      throwError(this, 403, "Não autenticado");
+      throwError(403, "Não autenticado");
     }
 
     const shouldShowApplications = user.role == Role.ADMIN || user.userId == id;
@@ -65,12 +73,15 @@ export class UserController extends Controller {
       include: { applications: shouldShowApplications },
     });
 
-    if (!result || result.deletedAt)
-      throwError(this, 404, "Usuário não encontrado.");
+    if (!result || result.deletedAt) throwError(404, "Usuário não encontrado.");
 
     return result;
   }
 
+  /**
+   * Cria um novo usuário (podendo ser de qualquer role ["USER", "COMPANY_HR", "COMPANY_ADMIN", "ADMIN"])
+   * @summary Criar usuário
+   */
   @Security("bearerAuth")
   @Post()
   public async createUser(
@@ -80,32 +91,30 @@ export class UserController extends Controller {
     const user = req.user;
 
     if (!user) {
-      throwError(this, 403, "Não autenticado");
+      throwError(403, "Não autenticado");
     }
 
     const { role: targetRole, companyId: targetCompanyId } = body;
 
     const validRoles = ["USER", "COMPANY_HR", "COMPANY_ADMIN", "ADMIN"];
     if (!targetRole || !validRoles.includes(targetRole)) {
-      throwError(this, 400, "Role inválida");
+      throwError(400, "Role inválida");
     }
 
     if (user.role === Role.COMPANY_ADMIN) {
       if (targetRole !== "COMPANY_HR" && targetRole !== "COMPANY_ADMIN")
         throwError(
-          this,
           403,
           "COMPANY_ADMIN só pode criar usuários com role COMPANY_HR ou COMPANY_ADMIN"
         );
 
       if (!targetCompanyId || targetCompanyId !== user.companyId)
         throwError(
-          this,
           403,
           "COMPANY_ADMIN só pode criar usuários da sua própria empresa"
         );
     } else {
-      throwError(this, 403, "Você não tem permissão para criar usuários");
+      throwError(403, "Você não tem permissão para criar usuários");
     }
 
     const newUser = await prisma.user.create({
@@ -115,6 +124,10 @@ export class UserController extends Controller {
     this.setStatus(201);
   }
 
+  /**
+   * Atualizar informações de um usuário
+   * @summary Atualizar usuário
+   */
   @Security("bearerAuth")
   @Patch("{id}")
   public async update(
@@ -125,13 +138,13 @@ export class UserController extends Controller {
     const user = req.user;
 
     if (!user) {
-      throwError(this, 403, "Não autenticado");
+      throwError(403, "Não autenticado");
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id } });
 
     if (!targetUser) {
-      throwError(this, 404, "Usuário não encontrado");
+      throwError(404, "Usuário não encontrado");
     }
 
     const isSelf = user.userId === id;
@@ -143,11 +156,11 @@ export class UserController extends Controller {
 
     if (!isSelf) {
       if (isBasicUser || isCompanyHR) {
-        throwError(this, 403, "Acesso negado");
+        throwError(403, "Acesso negado");
       }
 
       if (isCompanyAdmin && !isSameCompany) {
-        throwError(this, 403, "Você só pode editar usuários da sua empresa");
+        throwError(403, "Você só pode editar usuários da sua empresa");
       }
     }
 
@@ -159,6 +172,10 @@ export class UserController extends Controller {
     this.setStatus(204);
   }
 
+  /**
+   * Excluí um usuário
+   * @summary Excluir usuário
+   */
   @Security("bearerAuth")
   @Delete("{id}")
   public async delete(
@@ -168,27 +185,27 @@ export class UserController extends Controller {
     const user = req.user;
 
     if (!user) {
-      throwError(this, 403, "Não autenticado");
+      throwError(403, "Não autenticado");
     }
 
     if (user.userId === id) {
-      throwError(this, 403, "Você não pode deletar a si mesmo");
+      throwError(403, "Você não pode deletar a si mesmo");
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id } });
 
     if (!targetUser || targetUser.deletedAt) {
-      throwError(this, 404, "Usuário não encontrado ou já removido");
+      throwError(404, "Usuário não encontrado ou já removido");
     }
 
     const isSameCompany = user.companyId === targetUser.companyId;
 
     if (user.role === Role.USER || user.role === Role.COMPANY_HR) {
-      throwError(this, 403, "Acesso negado");
+      throwError(403, "Acesso negado");
     }
 
     if (user.role === Role.COMPANY_ADMIN && !isSameCompany) {
-      throwError(this, 403, "Você só pode deletar usuários da sua empresa");
+      throwError(403, "Você só pode deletar usuários da sua empresa");
     }
 
     await prisma.user.update({

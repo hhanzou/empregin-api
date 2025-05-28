@@ -5,11 +5,12 @@ export function hasRole(user: { role: Role }, roles: Role[]) {
   return roles.includes(user.role);
 }
 
-export function throwError(
-  controller: Controller,
-  status: number,
-  message = "Erro inesperado"
-): never {
-  controller.setStatus(status);
-  throw new Error(message);
+export class HttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+export function throwError(status: number, message: string): never {
+  throw new HttpError(status, message);
 }
