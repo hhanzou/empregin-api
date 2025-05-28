@@ -50,3 +50,6 @@ npx ts-node-dev -r tsconfig-paths/register src/index.ts
 
 👉 http://localhost:3000
 👉 Swagger: http://localhost:3000/docs
+
+### Para testar a aplicação em Deploy:
+ - https://empregin-api.onrender.com/docs
