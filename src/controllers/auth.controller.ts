@@ -3,6 +3,7 @@ import { Body, Controller, Post, Route, Tags } from "tsoa";
 import { login as loginService } from "@services/auth.service";
 
 import { register as registerService } from "@services/auth.service";
+import { throwError } from "@utils/index";
 
 type RegisterInput = {
   name: string;
@@ -47,16 +48,14 @@ export class AuthController extends Controller {
   @Post("login")
   public async login(@Body() body: LoginInput): Promise<LoginResponse> {
     if (!body.email || !body.password) {
-      this.setStatus(400);
-      throw new Error("Email e senha são obrigatórios");
+      throwError(400, "Email e senha são obrigatórios");
     }
 
     try {
       const result = await loginService(body.email, body.password);
       return result;
     } catch (err) {
-      this.setStatus(401);
-      throw new Error("Credenciais inválidas");
+      throwError(400, "Credenciais inválidas");
     }
   }
 
@@ -71,8 +70,7 @@ export class AuthController extends Controller {
     const { name, email, password } = body;
 
     if (!name || !email || !password) {
-      this.setStatus(400);
-      throw new Error("Nome, email e senha são obrigatórios");
+      throwError(400, "Nome, email e senha são obrigatórios");
     }
 
     const result = await registerService({

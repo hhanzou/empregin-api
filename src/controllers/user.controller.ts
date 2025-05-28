@@ -44,7 +44,7 @@ export class UserController extends Controller {
   @Security("bearerAuth")
   @Get()
   public async getAll(): Promise<any[]> {
-    return prisma.user.findMany({
+    return await prisma.user.findMany({
       where: { deletedAt: null },
       include: { applications: false },
     });

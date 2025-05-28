@@ -47,7 +47,7 @@ export class ApplicationController extends Controller {
       throwError(403, "Você só pode visualizar suas próprias inscrições");
     }
 
-    return prisma.application.findMany({
+    return await prisma.application.findMany({
       where: {
         userId,
         deletedAt: null,

@@ -43,11 +43,10 @@ export class CompanyController extends Controller {
     const user = req.user;
 
     if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
+      throwError(401, "Não autenticado");
     }
 
-    return prisma.company.findMany({
+    return await prisma.company.findMany({
       where: { deletedAt: null },
       include: { users: false, jobs: false },
     });
@@ -66,8 +65,7 @@ export class CompanyController extends Controller {
     });
 
     if (!company || company.deletedAt) {
-      this.setStatus(404);
-      throw new Error("Empresa não encontrada");
+      throwError(404, "Empresa não encontrada.");
     }
 
     return company;

@@ -32,7 +32,7 @@ export class JobController extends Controller {
   @Security("bearerAuth")
   @Get()
   public async getAll(): Promise<any[]> {
-    return prisma.job.findMany({
+    return await prisma.job.findMany({
       where: { deletedAt: null, status: JobStatus.OPEN },
       include: { company: true, applications: false },
     });
@@ -51,8 +51,7 @@ export class JobController extends Controller {
     });
 
     if (!job || job.deletedAt) {
-      this.setStatus(404);
-      throw new Error("Vaga não encontrada");
+      throwError(404, "Vaga não encontrada");
     }
 
     const { applications, ...safeResponse } = job;

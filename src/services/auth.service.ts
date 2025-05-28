@@ -7,12 +7,13 @@ import { LoginResponse } from "@controllers/auth.controller";
 
 export async function login(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
+
   if (
     !user ||
     !(await bcrypt.compare(password, user.password)) ||
     user.deletedAt
   ) {
-    throw new Error("Invalid credentials");
+    throw new Error("Credenciais inválidas");
   }
 
   const { password: _, ...safeUser } = user;
