@@ -1,9 +1,8 @@
-import { Controller, Route, Tags, Post, Body } from "tsoa";
+import { Body, Controller, Post, Route, Tags } from "tsoa";
 
 import { login as loginService } from "@services/auth.service";
 
 import { register as registerService } from "@services/auth.service";
-import { Role } from "@prisma/client";
 
 type RegisterInput = {
   name: string;
