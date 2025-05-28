@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx prisma generate && npx tsoa routes && npx tsoa spec",
+    "build": "npx prisma generate && npx prisma migrate deploy && npx tsoa routes && npx tsoa spec",
     "start": "npx ts-node -r tsconfig-paths/register src/index.ts",
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "tsoa:routes": "tsoa routes",
