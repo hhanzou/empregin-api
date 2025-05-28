@@ -14,6 +14,8 @@ import {
 
 import { RequestWithUser } from "@customTypes/RequestWithUser";
 import { prisma } from "@lib/prisma";
+import { Role } from "@prisma/client";
+import { hasRole, throwError } from "@utils/index";
 
 export type CreateCompanyDto = {
   name: string;
@@ -71,25 +73,18 @@ export class CompanyController extends Controller {
   ): Promise<any> {
     const user = req.user;
 
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
-    }
+    if (!user || !hasRole(user, [Role.ADMIN, Role.COMPANY_ADMIN]))
+      throwError(this, 403, "Acesso negado");
 
-    const isAdmin = user.role === "ADMIN";
-    const isCompanyAdmin = user.role === "COMPANY_ADMIN";
+    const isAdmin = user.role === Role.ADMIN;
+    const isCompanyAdmin = user.role === Role.COMPANY_ADMIN;
 
-    if (!isAdmin && !isCompanyAdmin) {
-      this.setStatus(403);
-      throw new Error("Você não tem permissão para criar empresas");
-    }
-
-    if (isCompanyAdmin && user.companyId) {
-      this.setStatus(403);
-      throw new Error(
+    if (isCompanyAdmin && user.companyId)
+      throwError(
+        this,
+        403,
         "Você já está vinculado a uma empresa e não pode criar outra"
       );
-    }
 
     const company = await prisma.company.create({
       data: body,
@@ -114,28 +109,21 @@ export class CompanyController extends Controller {
   ): Promise<any> {
     const user = req.user;
 
-    if (!user) {
-      this.setStatus(401);
-      throw new Error("Não autenticado");
-    }
+    if (!user || !hasRole(user, [Role.ADMIN, Role.COMPANY_ADMIN]))
+      throwError(this, 403, "Acesso negado");
 
     const company = await prisma.company.findFirst({
       where: { id, deletedAt: null },
     });
 
-    if (!company) {
-      this.setStatus(404);
-      throw new Error("Empresa não encontrada ou já excluída");
-    }
+    if (!company) throwError(this, 404, "Empresa não encontrada");
 
-    const isAdmin = user.role === "ADMIN";
+    const isAdmin = user.role === Role.ADMIN;
     const isCompanyAdmin =
-      user.role === "COMPANY_ADMIN" && user.companyId === id;
+      user.role === Role.COMPANY_ADMIN && user.companyId === id;
 
-    if (!isAdmin && !isCompanyAdmin) {
-      this.setStatus(403);
-      throw new Error("Você não tem permissão para editar esta empresa");
-    }
+    if (!isAdmin && !isCompanyAdmin)
+      throwError(this, 403, "Você não tem permissão para editar esta empresa");
 
     const updated = await prisma.company.update({
       where: { id },

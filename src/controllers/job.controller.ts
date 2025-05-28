@@ -75,12 +75,12 @@ export class JobController extends Controller {
     )
       throwError(this, 403, "Acesso negado");
 
-    const job = await prisma.job.findMany({
+    const jobs = await prisma.job.findMany({
       where: { companyId: id, status: JobStatus.OPEN },
       include: { company: true, applications: true },
     });
 
-    return job;
+    return jobs;
   }
 
   @Security("bearerAuth")
@@ -97,9 +97,11 @@ export class JobController extends Controller {
     if (user.role === Role.COMPANY_ADMIN && user.companyId !== body.companyId)
       throwError(this, 403, "Você só pode criar vagas da sua própria empresa");
 
-    return prisma.job.create({
+    await prisma.job.create({
       data: body,
     });
+
+    this.setStatus(201);
   }
 
   @Security("bearerAuth")

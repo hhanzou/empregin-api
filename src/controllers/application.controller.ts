@@ -92,11 +92,13 @@ export class ApplicationController extends Controller {
     if (existing)
       throwError(this, 409, "Já existe uma inscrição para essa vaga");
 
-    return prisma.application.create({
+    await prisma.application.create({
       data: {
         userId: targetUserId,
         jobId: body.jobId,
       },
     });
+
+    this.setStatus(201);
   }
 }
